@@ -185,21 +185,13 @@ extension WeatherListViewController {
     
         let context = CoreDataManager.shared.getContext()
         
-        let fetchRequest = NSFetchRequest<WeatherEntry>(entityName: "WeatherEntry")
-
         let placePredicate = NSPredicate(format: "place LIKE %@", place)
         let indexPredicate = NSPredicate(format: "index = %i", index)
         
-        fetchRequest.predicate = NSCompoundPredicate(
-            andPredicateWithSubpredicates: [placePredicate, indexPredicate]
-        )
-        let results = try? context.fetch(fetchRequest)
+        let results: [WeatherEntry] = CoreDataManager.shared.getData(queries: [placePredicate, indexPredicate])
         
-        print("-------------------")
-        
-        if results?.count != 0 {
-            // Delete item
-            context.delete(results![0])
+        if results.count != 0 {
+            CoreDataManager.shared.deleteElement(element: results[0])
         }
         
         guard let entity = NSEntityDescription.entity(forEntityName: "WeatherEntry", in: context) else {return}
@@ -211,7 +203,7 @@ extension WeatherListViewController {
         entry.searchDate = Date()
         entry.place = place
         
-        print(results?.count ?? 0)
+        print(results.count)
         try? context.save()
        
     }

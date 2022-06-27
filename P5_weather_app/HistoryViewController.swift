@@ -26,8 +26,6 @@ class HistoryViewController: UIViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
-        
-        loadData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -36,15 +34,8 @@ class HistoryViewController: UIViewController {
     }
     
     func loadData() {
-        let context = CoreDataManager.shared.getContext()
-        let fetchRequest = NSFetchRequest<WeatherEntry>(entityName: "WeatherEntry")
-        do {
-            let dbWEntries = try context.fetch(fetchRequest)
-            self.WEntries = dbWEntries
-            self.tableView.reloadData()
-        } catch(let error) {
-            print(error)
-        }
+        self.WEntries = CoreDataManager.shared.getData()
+        self.tableView.reloadData()
     }
     
 }
@@ -74,7 +65,7 @@ extension HistoryViewController: UITableViewDelegate, UITableViewDataSource {
         guard let detailsScreen = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "WeatherDetailsViewController")
                 as? WeatherDetailsViewController else {return}
         
-        let WItem = WEntries?[indexPath.row]
+        let WItem = WEntries?[WEntries!.count - indexPath.row - 1]
         detailsScreen.urlSearch = WItem?.urlSearch
         detailsScreen.index = Int(WItem!.index)
         
@@ -101,9 +92,7 @@ extension HistoryViewController{
             let sheet = UIAlertController(title: "Are you sure you want to delete this entry?", message: nil, preferredStyle: .alert)
             
             sheet.addAction(UIAlertAction(title: "Yes", style: .default) {_ in
-                let context = CoreDataManager.shared.getContext()
-                context.delete(element)
-                try? context.save()
+                CoreDataManager.shared.deleteElement(element: element)
                 
                 if let index = self.WEntries?.firstIndex(where: {element.id == $0.id}) {
                     self.WEntries?.remove(at: index)
